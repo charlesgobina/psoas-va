@@ -4,8 +4,20 @@ import https from "https";
 const app = e();
 import * as cheerio from "cheerio";
 
-const url =
-  "https://www.psoas.fi/en/apartments/?_sfm_huoneistojen_tilanne=vapaa_ja_vapautumassa";
+
+const apartmentType = {
+  shared: "k",
+  studio: "y",
+  family: "p",
+};
+
+
+const baseUrl = "https://www.psoas.fi/en/apartments";
+const vacantUrl = `${baseUrl}/?_sfm_huoneistojen_tilanne=vapaa_ja_vapautumassa`;
+const sharedUrl = `${baseUrl}/?_sfm_htyyppi=${apartmentType.shared}&_sfm_huoneistojen_tilanne=vapaa_ja_vapautumassa`;
+const studioUrl = `${baseUrl}/?_sfm_htyyppi=${apartmentType.studio}&_sfm_huoneistojen_tilanne=vapaa_ja_vapautumassa`;
+const familyUrl = `${baseUrl}/?_sfm_htyyppi=${apartmentType.family}&_sfm_huoneistojen_tilanne=vapaa_ja_vapautumassa`;
+
 
 // checking is there is internet connection
 
@@ -28,7 +40,49 @@ export const checkInternetConnectivity = () => {
 
 export async function getVacantApartments() {
   try {
-    const response = await fetch(url);
+    const response = await fetch(vacantUrl);
+    const $ = cheerio.load(await response.text());
+    const vacantApartments = $('option:contains("Vacant apartments")')
+      .text()
+      .match(/\((\d+)\)/)[1];
+    return vacantApartments;
+  } catch (error) {
+    return error;
+  }
+}
+
+// get vacant shared apartments
+export async function getVacantSharedApartments() {
+  try {
+    const response = await fetch(sharedUrl);
+    const $ = cheerio.load(await response.text());
+    const vacantApartments = $('option:contains("Vacant apartments")')
+      .text()
+      .match(/\((\d+)\)/)[1];
+    return vacantApartments;
+  } catch (error) {
+    return error;
+  }
+}
+
+// get vacant studio apartments
+export async function getVacantStudioApartments() {
+  try {
+    const response = await fetch(studioUrl);
+    const $ = cheerio.load(await response.text());
+    const vacantApartments = $('option:contains("Vacant apartments")')
+      .text()
+      .match(/\((\d+)\)/)[1];
+    return vacantApartments;
+  } catch (error) {
+    return error;
+  }
+}
+
+// get vacant family apartments
+export async function getVacantFamilyApartments() {
+  try {
+    const response = await fetch(familyUrl);
     const $ = cheerio.load(await response.text());
     const vacantApartments = $('option:contains("Vacant apartments")')
       .text()
