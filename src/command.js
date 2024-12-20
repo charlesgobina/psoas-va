@@ -2,210 +2,215 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import open from "open";
 import {
-  getVacantApartments,
-  getVacantFamilyApartments,
-  getVacantSharedApartments,
-  getVacantStudioApartments,
-  checkInternetConnectivity,
+  ApartmentScraper
 } from "../server.js";
 
-yargs(hideBin(process.argv))
-  .command(
-    "vacantapt",
-    "get total number of vacant apartments",
-    (yargs) => {
-      yargs.option("avata", {
-        alias: "a",
-        type: "boolean",
-        description: "Open the psoas website to the vacant apartments page",
-      });
-    },
-    async (argv) => {
-      const isConnected = await checkInternetConnectivity();
-      if (!isConnected) {
-        console.error("You are not connected to the internet");
-        return;
-      }
-      console.log("Fetching vacant apartments...");
-
-      const loadingInterval = setInterval(() => {
-        process.stdout.write(".");
-      }, 500);
-
-      try {
-        let vacantApartments = await getVacantApartments();
-        clearInterval(loadingInterval);
-        vacantApartments = parseInt(vacantApartments);
-        if (vacantApartments !== 0) {
-          console.log(
-            `\nThere is/are currently ${vacantApartments} vacant apartment(s)`
-          );
-        } else {
-          console.log("\nThere are currently no vacant apartments");
-        }
-
-        if (argv.avata) {
-          console.log(
-            "Opening the psoas website to the vacant apartments page..."
-          );
-          open(
-            "https://www.psoas.fi/en/apartments/?_sfm_huoneistojen_tilanne=vapaa_ja_vapautumassa"
-          );
-        }
-      } catch (error) {
-        clearInterval(loadingInterval);
-        console.error("\nFailed to fetch vacant apartments :( ");
-      }
+// Configuration for different apartment types
+const APARTMENT_TYPES = {
+  total: {
+    fetchMethod: getVacantApartments,
+    url: "https://www.psoas.fi/en/apartments/?_sfm_huoneistojen_tilanne=vapaa_ja_vapautumassa",
+    messages: {
+      fetching: "Fetching vacant apartments...",
+      found: (count) => `There is/are currently ${count} vacant apartment(s)`,
+      notFound: "There are currently no vacant apartments",
+      error: "Failed to fetch vacant apartments :( "
     }
-  )
-  .command(
-    "vacantshared",
-    "get the number of vacant shared apartments",
-    (yargs) => {
-      yargs.option("avata", {
-        alias: "a",
-        type: "boolean",
-        description: "Open the psoas website to the vacant apartments page",
-      });
-    },
-    async (argv) => {
-      const isConnected = await checkInternetConnectivity();
-      if (!isConnected) {
-        console.error("You are not connected to the internet");
-        return;
-      }
-      console.log("Fetching vacant shared apartments...");
-
-      const loadingInterval = setInterval(() => {
-        process.stdout.write(".");
-      }, 500);
-
-      try {
-        let vacantApartments = await getVacantSharedApartments();
-        clearInterval(loadingInterval);
-        vacantApartments = parseInt(vacantApartments);
-        if (vacantApartments !== 0) {
-          console.log(
-            `\nThere is/are currently ${vacantApartments} vacant shared apartment(s)`
-          );
-        } else {
-          console.log("\nThere are currently no vacant shared apartments");
-        }
-
-        if (argv.avata) {
-          console.log(
-            "Opening the psoas website to the vacant apartments page..."
-          );
-          open(
-            "https://www.psoas.fi/en/apartments/?_sfm_htyyppi=shared&_sfm_huoneistojen_tilanne=vapaa_ja_vapautumassa"
-          );
-        }
-      } catch (error) {
-        clearInterval(loadingInterval);
-        console.error("\nFailed to fetch vacant shared apartments :( ");
-      }
+  },
+  shared: {
+    fetchMethod: getVacantSharedApartments,
+    url: "https://www.psoas.fi/en/apartments/?_sfm_htyyppi=k&_sfm_huoneistojen_tilanne=vapaa_ja_vapautumassa",
+    messages: {
+      fetching: "Fetching vacant shared apartments...",
+      found: (count) => `There is/are currently ${count} vacant shared apartment(s)`,
+      notFound: "There are currently no vacant shared apartments",
+      error: "Failed to fetch vacant shared apartments :( "
     }
-  )
-  .command(
-    "vacantstudio",
-    "get the number of vacant studio apartments",
-    (yargs) => {
-      yargs.option("avata", {
-        alias: "a",
-        type: "boolean",
-        description: "Open the psoas website to the vacant apartments page",
-      });
-    },
-    async (argv) => {
-      const isConnected = await checkInternetConnectivity();
-      if (!isConnected) {
-        console.error("You are not connected to the internet");
-        return;
-      }
-      console.log("Fetching vacant studio apartments...");
-
-      const loadingInterval = setInterval(() => {
-        process.stdout.write(".");
-      }, 500);
-
-      try {
-        let vacantApartments = await getVacantStudioApartments();
-        clearInterval(loadingInterval);
-        vacantApartments = parseInt(vacantApartments);
-        if (vacantApartments !== 0) {
-          console.log(
-            `\nThere is/are currently ${vacantApartments} vacant studio apartment(s)`
-          );
-        } else {
-          console.log("\nThere are currently no vacant studio apartments");
-        }
-
-        if (argv.avata) {
-          console.log(
-            "Opening the psoas website to the vacant apartments page..."
-          );
-          open(
-            "https://www.psoas.fi/en/apartments/?_sfm_htyyppi=studio&_sfm_huoneistojen_tilanne=vapaa_ja_vapautumassa"
-          );
-        }
-      } catch (error) {
-        clearInterval(loadingInterval);
-        console.error("\nFailed to fetch vacant studio apartments :( ");
-      }
+  },
+  studio: {
+    fetchMethod: getVacantStudioApartments,
+    url: "https://www.psoas.fi/en/apartments/?_sfm_htyyppi=y&_sfm_huoneistojen_tilanne=vapaa_ja_vapautumassa",
+    messages: {
+      fetching: "Fetching vacant studio apartments...",
+      found: (count) => `There is/are currently ${count} vacant studio apartment(s)`,
+      notFound: "There are currently no vacant studio apartments",
+      error: "Failed to fetch vacant studio apartments :( "
     }
-  )
-  .command(
-    "vacantfamily",
-    "get the number of vacant family apartments",
-    (yargs) => {
-      yargs.option("avata", {
-        alias: "a",
-        type: "boolean",
-        description: "Open the psoas website to the vacant apartments page",
-      });
-    },
-    async (argv) => {
-      const isConnected = await checkInternetConnectivity();
-      if (!isConnected) {
-        console.error("You are not connected to the internet");
-        return;
-      }
-      console.log("Fetching vacant family apartments...");
-
-      const loadingInterval = setInterval(() => {
-        process.stdout.write(".");
-      }, 500);
-
-      try {
-        let vacantApartments = await getVacantFamilyApartments();
-        clearInterval(loadingInterval);
-        vacantApartments = parseInt(vacantApartments);
-        if (vacantApartments !== 0) {
-          console.log(
-            `\nThere is/are currently ${vacantApartments} vacant family apartment(s)`
-          );
-        } else {
-          console.log("\nThere are currently no vacant family apartments");
-        }
-
-        if (argv.avata) {
-          console.log(
-            "Opening the psoas website to the vacant apartments page..."
-          );
-          open(
-            "https://www.psoas.fi/en/apartments/?_sfm_htyyppi=family&_sfm_huoneistojen_tilanne=vapaa_ja_vapautumassa"
-          );
-        }
-      } catch (error) {
-        clearInterval(loadingInterval);
-        console.error("\nFailed to fetch vacant family apartments :( ");
-      }
+  },
+  family: {
+    fetchMethod: getVacantFamilyApartments,
+    url: "https://www.psoas.fi/en/apartments/?_sfm_htyyppi=p&_sfm_huoneistojen_tilanne=vapaa_ja_vapautumassa",
+    messages: {
+      fetching: "Fetching vacant family apartments...",
+      found: (count) => `There is/are currently ${count} vacant family apartment(s)`,
+      notFound: "There are currently no vacant family apartments",
+      error: "Failed to fetch vacant family apartments :( "
     }
-  )
-  .option("avata", {
+  }
+};
+
+// TODO: Implement these fetch methods
+async function getVacantApartments() {
+  const result = await ApartmentScraper.extractVacantApartments(
+    ApartmentScraper.getUrl()
+  );
+  return result;
+}
+
+async function getVacantSharedApartments() {
+  const result = await ApartmentScraper.extractVacantApartments(
+    ApartmentScraper.getUrl('SHARED')
+  );
+  return result;
+}
+
+async function getVacantStudioApartments() {
+  const result = await ApartmentScraper.extractVacantApartments(
+    ApartmentScraper.getUrl('STUDIO')
+  );
+  return result;
+}
+
+async function getVacantFamilyApartments() {
+  const result = await ApartmentScraper.extractVacantApartments(
+    ApartmentScraper.getUrl('FAMILY')
+  );
+  return result;
+}
+
+async function history(limit) {
+  return await ApartmentScraper.getApartmentHistory(limit);
+}
+
+// Utility function to handle common CLI command logic
+async function handleApartmentCommand(apartmentType, argv) {
+  // Optional: Uncomment if you want to check internet connectivity
+  const isConnected = await ApartmentScraper.checkInternetConnectivity();
+  if (!isConnected) {
+    console.error("You are not connected to the internet");
+    return;
+  }
+
+  const config = APARTMENT_TYPES[apartmentType];
+  console.log(config.messages.fetching);
+
+  // Create a loading indicator
+  const loadingInterval = setInterval(() => {
+    process.stdout.write(".");
+  }, 500);
+
+  try {
+    // Fetch vacant apartments
+    let vacantApartments = await config.fetchMethod();
+    clearInterval(loadingInterval);
+    vacantApartments = parseInt(vacantApartments);
+
+    // Display results
+    if (vacantApartments !== 0) {
+      console.log(`\n${config.messages.found(vacantApartments)}`);
+    } else {
+      console.log(`\n${config.messages.notFound}`);
+      return;
+    }
+
+    // Open website if -a/--avata flag is set
+    if (argv.avata) {
+      console.log("Opening the psoas website to the vacant apartments page...");
+      open(config.url);
+    }
+  } catch (error) {
+    clearInterval(loadingInterval);
+    console.error(`\n${config.messages.error}`);
+  } finally {
+    process.exit(0);
+  }
+}
+
+// Create CLI application using yargs
+const cli = yargs(hideBin(process.argv));
+
+// Add common options
+const commonOptions = (yargs) => {
+  return yargs.option("avata", {
     alias: "a",
     type: "boolean",
     description: "Open the psoas website to the vacant apartments page",
-  })
-  .demandCommand(1)
-  .parse();
+  });
+};
+
+// Configure commands dynamically
+Object.keys(APARTMENT_TYPES).forEach(type => {
+  if (type !== 'total') {
+    cli.command(
+      `vacant${type}`, 
+      `get the number of vacant ${type} apartments`,
+      commonOptions,
+      async (argv) => handleApartmentCommand(type, argv)
+    );
+  } else {
+    cli.command(
+      'vacantapt', 
+      'get total number of vacant apartments', 
+      commonOptions,
+      async (argv) => {
+        if (argv.avata) {
+          open(APARTMENT_TYPES.total.url);
+        } if (argv.discord) {
+          await ApartmentScraper.scrapeVacantApartments();
+        }
+        handleApartmentCommand(type, argv)
+      }
+    );
+  }
+});
+
+// Add history command
+cli.command(
+  "history",
+  "get the history of vacant apartments",
+  (yargs) => {
+    return yargs.option("limit", {
+      alias: "l",
+      type: "number",
+      description: "Limit the number of history records to display",
+    });
+  },
+  async (argv) => {
+    console.log("Fetching history of vacant apartments...");
+
+    const loadingInterval = setInterval(() => {
+      process.stdout.write(".");
+    }, 500);
+
+    try {
+      const historyData = await ApartmentScraper.getMostRecentApartmentData()
+      clearInterval(loadingInterval);
+      console.log("\nHistory of vacant apartments:");
+      console.table(historyData);
+    } catch (error) {
+      clearInterval(loadingInterval);
+      console.error("\nFailed to fetch history of vacant apartments :( ");
+    } finally {
+      process.exit(0);
+    }
+  }
+)
+
+// Add global options
+.option("avata", {
+  alias: "a",
+  type: "boolean",
+  description: "Open the psoas website to the vacant apartments page",
+})
+.option("limit", {
+  alias: "l",
+  type: "number",
+  description: "Limit the number of history records to display",
+})
+.option("discord", {
+  alias: "d",
+  type: "boolean",
+  description: "Send the vacant apartment data to Discord",
+})
+.demandCommand(1)
+.parse();
