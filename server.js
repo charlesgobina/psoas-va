@@ -4,6 +4,7 @@ import * as cheerio from "cheerio";
 import dotenv from "dotenv";
 import { connectToMQTT, publishMessage } from "./mqtt.js";
 import { connectToDatabase } from "./db/db-connect.js";
+import ApartmentModel from "./models/apartment-model.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from "fs";
 import { scrapeAddresses, readAddressesFromFile } from "./utils/address-scrapper.js";
@@ -91,7 +92,6 @@ class ApartmentScraper {
 
       // console.log("Result of address extraction:", result.response.text());
 
-      console.log(addresses);
 
       const match = vacantText.match(/\((\d+)\)/);
       if (match) {
@@ -145,10 +145,35 @@ class ApartmentScraper {
       );
 
       // Prepare data for storage and publishing
+      let shared = 0;
+      let studio = 0;
+      let family = 0;
+
+      // Extract counts for each apartment type
+      for (const vacancy of vacancies) {
+        const { type, count } = vacancy;
+        switch (type) {
+          case "shared":
+            shared = count;
+            break;
+          case "family":
+            family = count;
+            break;
+          case "studio":
+            studio = count;
+            break;
+          default:
+            break;
+        }
+      }
+
+
       const dataToInsert = {
         type: "vacant",
         count: totalVacant,
-        ...Object.fromEntries(vacancies.map((v) => [v.type, v.count])),
+        shared,
+        studio,
+        family,
         date,
         time,
         apartmentType: "ALL",
@@ -252,7 +277,7 @@ async function initApp() {
   // Connect to MQTT broker
   await connectToMQTT();
 
-  // Optional: Set up periodic scraping
+  // Set up periodic scraping
   // setInterval(ApartmentScraper.scrapeVacantApartments, 60 * 60 * 1000); // Every hour
 }
 

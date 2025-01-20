@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   web:
-    image: i4mcloud/demo-pub:1.0
+    image: i4mcloud/psoas-va:1.0
     # build: .
     ports:
       - "3000:3000"
@@ -23,12 +23,12 @@ services:
       - MONGO_INITDB_DATABASE=apartmentData
 
   discordpublisher:
-    image: i4mcloud/demo-sub:1.0
+    image: i4mcloud/psoas-va-sub:1.0
     ports:
       - "3001:3001"
     environment:
       - MQTT_BROKER_URL=mqtts://mqtt.cgobinak.rahtiapp.fi
       - TOPIC='vacant/allapartments'
       - MQTT_PORT=443
-      - DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/1316911925765869679/41nef5efwuBNChp7ymXGnCNMx_6rkWHUud-Cu73xeFg3ryTJ80SQpOYsDCL-xggsfTmM
+      - DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/1329966612564148287/LFThYCGhUn6S_V2nXdNtWNqqsVB3kup6aiezI8pBGhhda2lJmRu6WGLUe4QltO-y_OXx
     restart: always

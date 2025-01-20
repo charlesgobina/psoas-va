@@ -57,7 +57,7 @@ function subscribeToTopic(topic) {
 function connectToMQTT() {
   return new Promise((resolve, reject) => {
     client.on('connect', () => {
-      // console.log('Connected to MQTT broker');
+      console.log('Connected to MQTT broker');
       resolve(true);
     });
 
