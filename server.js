@@ -130,6 +130,8 @@ class ApartmentScraper {
       // separate the addresses by commas
       addresses = addresses.split('\n').join(', ');
 
+      console.log("Total vacant apartments:", addresses);
+
       // Fetch specific apartment type vacancies
       const vacancies = await Promise.all(
         Object.keys(APARTMENT_TYPES).map(async (type) => {
@@ -181,11 +183,13 @@ class ApartmentScraper {
         url: this.getUrl(),
       };
 
+      // console.log("Vacant apartment data:", dataToInsert);
+
       // Publish to MQTT
-      publishMessage(
-        process.env.TOPIC || "vacant/allapartments",
-        JSON.stringify(dataToInsert)
-      );
+      // publishMessage(
+      //   process.env.TOPIC || "vacant/allapartments",
+      //   JSON.stringify(dataToInsert)
+      // );
 
       // make sure mongodb is connected
       const db = await connectToDatabase();
