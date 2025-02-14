@@ -2,3 +2,4 @@ node_modules
 .env
 ca.crt
 addresses.txt
+service-account.json
