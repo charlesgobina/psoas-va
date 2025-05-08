@@ -1,29 +1,16 @@
-# Use the official Node.js image as the base image
-FROM node:lts-slim
-
-# Set the working directory inside the container
+# 1) Install dependencies in a build stage
+FROM node:22-alpine AS builder
 WORKDIR /app
-
-# Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
-
-# Install the dependencies
-RUN npm install
-
-# Copy the rest of the application code to the working directory
+RUN npm ci --omit=dev
 COPY . .
 
-# run npm link to link the local package to the global module directory
-RUN npm link
-
-# Expose the port the app runs on
+# 2) Production image
+FROM node:22-alpine AS runtime
+WORKDIR /app
+# Copy only the compiled app + prod deps
+COPY --from=builder /app ./
+# Run as non-root
+USER node
 EXPOSE 3000
-
-# env variables
-ENV MONGO_URI=mongodb://mongo:27017/apartmentData
-ENV MQTT_BROKER_URL='mqtts://mqtt.cgobinak.rahtiapp.fi'
-ENV TOPIC='vacant/allapartments'
-ENV MQTT_PORT=443
-
-# Serve the app
-CMD ["npm", "start"]
+CMD ["node", "server.js"]
