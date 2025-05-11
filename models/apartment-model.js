@@ -27,7 +27,11 @@ class ApartmentModel {
     apartmentType = "",
     imageList = [],
     ownUrl = "",
-    updatedAt = new Date().toISOString() // Automatically sets current timestamp
+    updatedAt = new Date().toISOString(), // Automatically sets current timestamp
+    isAvailable = false, // NEW: Explicit status field
+    createdAt = new Date().toISOString(), // Automatically sets current timestamp
+    lastUpdated = new Date().toISOString(), // Automatically sets current timestamp
+    lastChecked = new Date().toISOString(), // Automatically sets current timestamp
   } = {}) {
     this.apartmentId = apartmentId;
     this.apartmentStatus = apartmentStatus;
@@ -55,12 +59,33 @@ class ApartmentModel {
     this.imageList = imageList;
     this.ownUrl = ownUrl;
     this.updatedAt = updatedAt;
+    // NEW: Explicit status field
+    this.isAvailable = this._determineAvailability({
+      reserveButton,
+      vacantFrom,
+    });
+
+    // Timestamps
+    this.createdAt = createdAt || new Date();
+    this.lastUpdated = lastUpdated || new Date();
+    this.lastChecked = lastChecked || new Date();
   }
 
   // Method to update apartment details and set updatedAt timestamp
   updateDetails(updatedData) {
     Object.assign(this, updatedData);
     this.updatedAt = new Date().toISOString();
+  }
+
+  // Helper method to determine availability status
+  _determineAvailability(data) {
+    // An apartment is considered available if it has both a reserve button and a vacant date
+    return (
+      data.reserveButton !== "" &&
+      data.vacantFrom !== "" ||
+      data.reserveButton !== undefined &&
+      data.vacantFrom !== undefined
+    );
   }
 
   // Convert object to JSON string
@@ -91,10 +116,13 @@ class ApartmentModel {
       apartmentType: this.apartmentType,
       imageList: this.imageList,
       ownUrl: this.ownUrl,
-      updatedAt: this.updatedAt
+      updatedAt: this.updatedAt,
+      // NEW: Explicit status field
+      isAvailable: this.isAvailable,
+      createdAt: this.createdAt,
+      lastUpdated: this.lastUpdated,
+      lastChecked: this.lastChecked,
     };
-
-    
   }
 
   // Create an Apartment object from a JSON string
